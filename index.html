@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>손심바 스크래치 복권 MVP</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="stage">
+        <div class="ticket-wrap">
+          <article class="ticket-shell" aria-label="손심바 스크래치 복권">
+            <header class="ticket-header">
+              <div class="ticket-brand">
+                <p class="brand-badge">제 110.12 회</p>
+                <p class="brand-mini">손심바 즉석 스크래치</p>
+              </div>
+              <div class="ticket-price">2,000원</div>
+            </header>
+
+            <section class="hero">
+              <p class="eyebrow">Lucky Simba Ticket</p>
+              <h1>110.12를 긁어라</h1>
+              <p class="description">
+                앞 5칸은 숫자 전용, 점 칸은 절반 확률로 점이 찍히고, 마지막 3칸은
+                각 칸마다 <strong>1/11 확률</strong>로 손심바 얼굴이 나옵니다.
+              </p>
+            </section>
+
+            <section class="ticket-body">
+              <aside class="ticket-side">
+                <div class="barcode" aria-hidden="true">
+                  <span></span><span></span><span></span><span></span><span></span>
+                  <span></span><span></span><span></span><span></span><span></span>
+                  <span></span><span></span>
+                </div>
+                <div class="play-guide">
+                  <p>숫자 5칸</p>
+                  <p>점 1칸</p>
+                  <p>얼굴 3칸</p>
+                </div>
+              </aside>
+
+              <div class="scratch-stage">
+                <div class="scratch-frame">
+                  <div
+                    id="scratch-board"
+                    class="scratch-board"
+                    aria-live="polite"
+                  >
+                    <div id="symbol-grid" class="symbol-grid"></div>
+                    <canvas
+                      id="scratch-canvas"
+                      class="scratch-canvas"
+                      aria-label="스크래치 영역"
+                    ></canvas>
+                    <div class="scratch-instruction">
+                      손가락이나 마우스로 은박을 문질러 보세요
+                    </div>
+                  </div>
+                </div>
+
+                <div class="meta-strip">
+                  <div>
+                    <span class="label">숫자칸</span>
+                    <p>0~9 숫자만 등장</p>
+                  </div>
+                  <div>
+                    <span class="label">점칸</span>
+                    <p>점이 찍힐 확률 1/2</p>
+                  </div>
+                  <div>
+                    <span class="label">얼굴칸</span>
+                    <p>각 칸마다 얼굴 등장 확률 1/11</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </article>
+        </div>
+
+        <section class="hud-panel">
+          <p id="status-text" class="status-text">
+            복권을 문질러 결과를 확인해보세요.
+          </p>
+          <div id="debug-panel" class="debug-panel" hidden>
+            <label class="debug-label" for="debug-password">테스트 암호</label>
+            <div class="debug-row">
+              <input
+                id="debug-password"
+                class="debug-input"
+                type="password"
+                placeholder="숨겨진 암호 입력"
+                autocomplete="off"
+              />
+              <button id="debug-apply-button" class="ghost-button" type="button">
+                당첨 복권 생성
+              </button>
+            </div>
+          </div>
+          <div class="summary">
+            <div>
+              <span class="label">현재 상태</span>
+              <p id="scratch-progress">은박 intact</p>
+            </div>
+            <div>
+              <span class="label">목표 조합</span>
+              <p>110.12 + 얼굴 3개</p>
+            </div>
+            <div>
+              <span class="label">공개 결과</span>
+              <p id="result-sequence">아직 전부 공개 전</p>
+            </div>
+          </div>
+          <div class="controls">
+            <button id="new-ticket-button" class="primary-button" type="button">
+              새 복권 뽑기
+            </button>
+            <button id="reveal-all-button" class="ghost-button" type="button">
+              전부 공개
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <div
+        id="win-modal"
+        class="win-modal"
+        hidden
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="win-modal-title"
+      >
+        <div class="win-modal__backdrop" data-close-win-modal="true"></div>
+        <div class="win-modal__dialog">
+          <div class="win-confetti" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span>
+          </div>
+          <div class="win-burst" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <p class="win-modal__eyebrow">Lucky Simba Jackpot</p>
+          <h2 id="win-modal-title" class="win-modal__title">축 당첨</h2>
+          <p class="win-modal__text">
+            110.12와 손심바 얼굴 3개가 모두 맞았습니다.
+          </p>
+          <div class="win-modal__chips">
+            <span>110.12</span>
+            <span>얼굴 3개</span>
+            <span>당첨 확정</span>
+          </div>
+          <button id="win-modal-close" class="primary-button" type="button">
+            확인
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="super-win-modal"
+        class="win-modal win-modal--super"
+        hidden
+        aria-hidden="true"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="super-win-modal-title"
+      >
+        <div class="win-modal__backdrop" data-close-super-win-modal="true"></div>
+        <div class="win-modal__dialog">
+          <div class="win-confetti" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span>
+          </div>
+          <div class="win-burst" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+          <p class="win-modal__eyebrow">Hidden Color Jackpot</p>
+          <h2 id="super-win-modal-title" class="win-modal__title">초초초 당첨</h2>
+          <p class="win-modal__text">
+            손심바 3칸이 전부 컬러 버전으로 등장했습니다.
+          </p>
+          <div class="win-modal__chips">
+            <span>110.12</span>
+            <span>컬러 얼굴 3개</span>
+            <span>히든 잭팟</span>
+          </div>
+          <button id="super-win-modal-close" class="primary-button" type="button">
+            확인
+          </button>
+        </div>
+      </div>
+
+      <script src="./app.js"></script>
+    </main>
+  </body>
+</html>
