@@ -4,8 +4,9 @@ const LEADING_DIGITS = ["1", "1", "0"];
 const TRAILING_DIGITS = ["1", "2"];
 const FACE_SLOT_COUNT = 3;
 const FACE_SLOT_PROBABILITIES = [1 / 3, 1 / 3, 1 / 4];
-const COLOR_FACE_PROBABILITY = 1 / 5;
+const COLOR_FACE_SLOT_PROBABILITIES = [2 / 3, 1 / 2, 1 / 3];
 const GOLDEN_NUMBER_PROBABILITY = 1 / 2;
+const TARGET_DIGIT_WEIGHT = 1.35;
 const SCRATCH_COMPLETE_THRESHOLD = 0.52;
 const SCRATCH_BRUSH_RATIO = 0.075;
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -42,8 +43,26 @@ let secretSpaceProgress = 0;
 let winModalShown = false;
 let superWinModalShown = false;
 
-function pickDigit() {
-  return DIGITS[Math.floor(Math.random() * DIGITS.length)];
+function pickDigit(preferredDigit = null) {
+  if (!preferredDigit) {
+    return DIGITS[Math.floor(Math.random() * DIGITS.length)];
+  }
+
+  const weightedDigits = DIGITS.map((digit) => ({
+    digit,
+    weight: digit === preferredDigit ? TARGET_DIGIT_WEIGHT : 1,
+  }));
+  const totalWeight = weightedDigits.reduce((sum, item) => sum + item.weight, 0);
+  let randomValue = Math.random() * totalWeight;
+
+  for (const item of weightedDigits) {
+    randomValue -= item.weight;
+    if (randomValue <= 0) {
+      return item.digit;
+    }
+  }
+
+  return preferredDigit;
 }
 
 function buildTicket() {
@@ -57,13 +76,13 @@ function buildTicket() {
     return buildWinningTicket();
   }
 
-  const leadingDigitSlots = LEADING_DIGITS.map((_, index) => ({
+  const leadingDigitSlots = LEADING_DIGITS.map((digit, index) => ({
     slotIndex: index,
     slotType: "digit",
     symbol: {
       id: `digit-${index}`,
       type: "number",
-      label: pickDigit(),
+      label: pickDigit(digit),
     },
   }));
 
@@ -78,13 +97,13 @@ function buildTicket() {
     },
   };
 
-  const trailingDigitSlots = TRAILING_DIGITS.map((_, index) => ({
+  const trailingDigitSlots = TRAILING_DIGITS.map((digit, index) => ({
     slotIndex: leadingDigitSlots.length + 1 + index,
     slotType: "digit",
     symbol: {
       id: `digit-tail-${index}`,
       type: "number",
-      label: pickDigit(),
+      label: pickDigit(digit),
     },
   }));
 
@@ -99,7 +118,13 @@ function buildTicket() {
     };
   });
 
-  return [...leadingDigitSlots, dotSlot, ...trailingDigitSlots, ...faceSlots];
+  const ticket = [...leadingDigitSlots, dotSlot, ...trailingDigitSlots, ...faceSlots];
+
+  if (isWinningTicket(ticket)) {
+    return applyWinningEnhancements(ticket);
+  }
+
+  return ticket;
 }
 
 function buildWinningTicket(options = {}) {
@@ -139,7 +164,9 @@ function buildWinningTicket(options = {}) {
   }));
 
   const faceSlots = Array.from({ length: FACE_SLOT_COUNT }, (_, index) => {
-    const isColorFace = forceAllColorFaces || Math.random() < COLOR_FACE_PROBABILITY;
+    const isColorFace =
+      forceAllColorFaces ||
+      Math.random() < COLOR_FACE_SLOT_PROBABILITIES[index];
     return {
       slotIndex: LEADING_DIGITS.length + 1 + TRAILING_DIGITS.length + index,
       slotType: "face",
@@ -153,6 +180,42 @@ function buildWinningTicket(options = {}) {
   });
 
   return [...leadingDigitSlots, dotSlot, ...trailingDigitSlots, ...faceSlots];
+}
+
+function applyWinningEnhancements(ticket, options = {}) {
+  const forceAllColorFaces = options.forceAllColorFaces === true;
+  const hasGoldenNumbers = Math.random() < GOLDEN_NUMBER_PROBABILITY;
+  const faceStartIndex = LEADING_DIGITS.length + 1 + TRAILING_DIGITS.length;
+
+  return ticket.map((item, index) => {
+    if (item.slotType === "digit" || item.slotType === "dot") {
+      return {
+        ...item,
+        symbol: {
+          ...item.symbol,
+          golden: hasGoldenNumbers,
+        },
+      };
+    }
+
+    if (index >= faceStartIndex && item.symbol.type === "image") {
+      const faceIndex = index - faceStartIndex;
+      const isColorFace =
+        forceAllColorFaces ||
+        Math.random() < COLOR_FACE_SLOT_PROBABILITIES[faceIndex];
+
+      return {
+        ...item,
+        symbol: {
+          ...item.symbol,
+          label: isColorFace ? "컬러 손심바" : "손심바",
+          variant: isColorFace ? "color" : "mono",
+        },
+      };
+    }
+
+    return item;
+  });
 }
 
 function renderSymbol(symbol) {
