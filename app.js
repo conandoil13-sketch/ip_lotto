@@ -3,7 +3,7 @@ const COLOR_IMAGE_SRC = "./13925_13632_1213.jpg";
 const LEADING_DIGITS = ["1", "1", "0"];
 const TRAILING_DIGITS = ["1", "2"];
 const FACE_SLOT_COUNT = 3;
-const FACE_PROBABILITY = 1 / 11;
+const FACE_SLOT_PROBABILITIES = [1 / 3, 1 / 3, 1 / 4];
 const COLOR_FACE_PROBABILITY = 1 / 5;
 const GOLDEN_NUMBER_PROBABILITY = 1 / 2;
 const SCRATCH_COMPLETE_THRESHOLD = 0.52;
@@ -89,7 +89,7 @@ function buildTicket() {
   }));
 
   const faceSlots = Array.from({ length: FACE_SLOT_COUNT }, (_, index) => {
-    const hasFace = Math.random() < FACE_PROBABILITY;
+    const hasFace = Math.random() < FACE_SLOT_PROBABILITIES[index];
     return {
       slotIndex: leadingDigitSlots.length + 1 + trailingDigitSlots.length + index,
       slotType: "face",
