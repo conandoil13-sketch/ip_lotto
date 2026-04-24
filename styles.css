@@ -140,20 +140,33 @@ body {
   font-weight: 900;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition:
     transform 140ms ease,
     box-shadow 140ms ease,
     background 140ms ease;
 }
 
+.ticket-price-button {
+  appearance: none;
+  border: 1px solid rgba(56, 78, 15, 0.12);
+  font: inherit;
+  color: inherit;
+}
+
 #mobile-secret-trigger {
   cursor: pointer;
+  pointer-events: auto;
 }
 
 #mobile-secret-trigger.is-tapped {
   transform: translateY(1px) scale(0.96);
   box-shadow: 0 6px 10px rgba(102, 128, 20, 0.12);
   background: rgba(255, 244, 187, 0.94);
+}
+
+#mobile-secret-trigger:active {
+  transform: translateY(1px) scale(0.96);
 }
 
 .hero {

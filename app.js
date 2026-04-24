@@ -46,6 +46,7 @@ let secretSpaceProgress = 0;
 let mobileSecretTapProgress = 0;
 let mobileSecretTapTimeoutId = 0;
 let mobileSecretFeedbackTimeoutId = 0;
+let lastMobileSecretActivationAt = 0;
 let winModalShown = false;
 let superWinModalShown = false;
 
@@ -602,6 +603,20 @@ function registerMobileSecretTap() {
   }
 }
 
+function handleMobileSecretTriggerActivation(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
+  const now = Date.now();
+  if (now - lastMobileSecretActivationAt < 250) {
+    return;
+  }
+  lastMobileSecretActivationAt = now;
+
+  registerMobileSecretTap();
+}
+
 debugApplyButton.addEventListener("click", () => {
   if (
     debugPasswordInput.value !== DEBUG_WIN_PASSWORD &&
@@ -653,15 +668,14 @@ superWinModalCloseButton.addEventListener("click", () => {
   closeSuperWinModal();
 });
 
-mobileSecretTrigger.addEventListener("click", () => {
-  registerMobileSecretTap();
-});
+mobileSecretTrigger.addEventListener("click", handleMobileSecretTriggerActivation);
+mobileSecretTrigger.addEventListener("pointerup", handleMobileSecretTriggerActivation);
 
 mobileSecretTrigger.addEventListener("touchstart", () => {
   mobileSecretTrigger.classList.add("is-tapped");
 }, { passive: true });
 
-mobileSecretTrigger.addEventListener("touchend", () => {
+mobileSecretTrigger.addEventListener("touchend", (event) => {
   if (mobileSecretFeedbackTimeoutId) {
     window.clearTimeout(mobileSecretFeedbackTimeoutId);
   }
@@ -669,7 +683,8 @@ mobileSecretTrigger.addEventListener("touchend", () => {
   mobileSecretFeedbackTimeoutId = window.setTimeout(() => {
     mobileSecretTrigger.classList.remove("is-tapped");
   }, 160);
-}, { passive: true });
+  handleMobileSecretTriggerActivation(event);
+}, { passive: false });
 
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !superWinModal.hidden) {
