@@ -13,6 +13,8 @@ const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 const DEBUG_WIN_PASSWORD = "Simba-110.12::ForceWin#2026!MoonRiver";
 const DEBUG_SUPER_WIN_PASSWORD = "Simba-110.12::TripleColor#2026!Sunburst";
 const SECRET_SPACE_COUNT = 10;
+const MOBILE_SECRET_TAP_COUNT = 7;
+const MOBILE_SECRET_TAP_WINDOW_MS = 2500;
 
 const symbolGridElement = document.querySelector("#symbol-grid");
 const scratchCanvas = document.querySelector("#scratch-canvas");
@@ -29,6 +31,7 @@ const winModal = document.querySelector("#win-modal");
 const winModalCloseButton = document.querySelector("#win-modal-close");
 const superWinModal = document.querySelector("#super-win-modal");
 const superWinModalCloseButton = document.querySelector("#super-win-modal-close");
+const mobileSecretTrigger = document.querySelector("#mobile-secret-trigger");
 
 const canvasContext = scratchCanvas.getContext("2d", { willReadFrequently: true });
 
@@ -40,6 +43,8 @@ let progressRafId = 0;
 let forceWinningTicket = false;
 let forceSuperWinningTicket = false;
 let secretSpaceProgress = 0;
+let mobileSecretTapProgress = 0;
+let mobileSecretTapTimeoutId = 0;
 let winModalShown = false;
 let superWinModalShown = false;
 
@@ -562,6 +567,31 @@ function showDebugPanel() {
   }, 0);
 }
 
+function resetMobileSecretTapProgress() {
+  mobileSecretTapProgress = 0;
+  if (mobileSecretTapTimeoutId) {
+    window.clearTimeout(mobileSecretTapTimeoutId);
+    mobileSecretTapTimeoutId = 0;
+  }
+}
+
+function registerMobileSecretTap() {
+  mobileSecretTapProgress += 1;
+
+  if (mobileSecretTapTimeoutId) {
+    window.clearTimeout(mobileSecretTapTimeoutId);
+  }
+
+  mobileSecretTapTimeoutId = window.setTimeout(() => {
+    resetMobileSecretTapProgress();
+  }, MOBILE_SECRET_TAP_WINDOW_MS);
+
+  if (mobileSecretTapProgress >= MOBILE_SECRET_TAP_COUNT) {
+    resetMobileSecretTapProgress();
+    showDebugPanel();
+  }
+}
+
 debugApplyButton.addEventListener("click", () => {
   if (
     debugPasswordInput.value !== DEBUG_WIN_PASSWORD &&
@@ -611,6 +641,10 @@ superWinModal.addEventListener("click", (event) => {
 
 superWinModalCloseButton.addEventListener("click", () => {
   closeSuperWinModal();
+});
+
+mobileSecretTrigger.addEventListener("click", () => {
+  registerMobileSecretTap();
 });
 
 window.addEventListener("keydown", (event) => {
