@@ -138,6 +138,22 @@ body {
 
 .ticket-price {
   font-weight: 900;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
+}
+
+#mobile-secret-trigger {
+  cursor: pointer;
+}
+
+#mobile-secret-trigger.is-tapped {
+  transform: translateY(1px) scale(0.96);
+  box-shadow: 0 6px 10px rgba(102, 128, 20, 0.12);
+  background: rgba(255, 244, 187, 0.94);
 }
 
 .hero {

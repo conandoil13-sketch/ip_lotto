@@ -45,6 +45,7 @@ let forceSuperWinningTicket = false;
 let secretSpaceProgress = 0;
 let mobileSecretTapProgress = 0;
 let mobileSecretTapTimeoutId = 0;
+let mobileSecretFeedbackTimeoutId = 0;
 let winModalShown = false;
 let superWinModalShown = false;
 
@@ -577,6 +578,15 @@ function resetMobileSecretTapProgress() {
 
 function registerMobileSecretTap() {
   mobileSecretTapProgress += 1;
+  mobileSecretTrigger.classList.add("is-tapped");
+
+  if (mobileSecretFeedbackTimeoutId) {
+    window.clearTimeout(mobileSecretFeedbackTimeoutId);
+  }
+
+  mobileSecretFeedbackTimeoutId = window.setTimeout(() => {
+    mobileSecretTrigger.classList.remove("is-tapped");
+  }, 160);
 
   if (mobileSecretTapTimeoutId) {
     window.clearTimeout(mobileSecretTapTimeoutId);
@@ -646,6 +656,20 @@ superWinModalCloseButton.addEventListener("click", () => {
 mobileSecretTrigger.addEventListener("click", () => {
   registerMobileSecretTap();
 });
+
+mobileSecretTrigger.addEventListener("touchstart", () => {
+  mobileSecretTrigger.classList.add("is-tapped");
+}, { passive: true });
+
+mobileSecretTrigger.addEventListener("touchend", () => {
+  if (mobileSecretFeedbackTimeoutId) {
+    window.clearTimeout(mobileSecretFeedbackTimeoutId);
+  }
+
+  mobileSecretFeedbackTimeoutId = window.setTimeout(() => {
+    mobileSecretTrigger.classList.remove("is-tapped");
+  }, 160);
+}, { passive: true });
 
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !superWinModal.hidden) {
